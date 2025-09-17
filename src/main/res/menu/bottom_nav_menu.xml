@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+        <item
+            android:id="@+id/nav_home"
+            android:title="Home"
+            android:icon="@drawable/home_ic"
+            />
+
+        <item
+            android:id="@+id/nav_advisory"
+            android:icon="@drawable/advice"
+            android:title="Advisory" />
+
+        <item
+            android:id="@+id/nav_market"
+            android:icon="@drawable/ic_market"
+            android:title="Market Prices" />
+
+        <item
+            android:id="@+id/nav_alerts"
+            android:icon="@drawable/ic_alert"
+            android:title="Alerts" />
+
+        <item
+            android:id="@+id/nav_profile"
+            android:icon="@drawable/ic_profile"
+            android:title="Profile" />
+
+    </menu>

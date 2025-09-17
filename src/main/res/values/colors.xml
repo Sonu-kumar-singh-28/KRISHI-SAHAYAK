@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Basic Colors -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- App Theme Colors -->
+    <color name="primary_green">#2E7D32</color>
+    <color name="light_green">#4CAF50</color>
+    <color name="dark_green">#1B5E20</color>
+
+    <!-- Text & Icon Colors -->
+    <color name="brown">#6D4C41</color>
+    <color name="dark_gray">#616161</color>
+    <color name="light_gray">#E0E0E0</color>
+
+    <!-- Alert Colors -->
+    <color name="alert_red">#D32F2F</color>
+    <color name="alert_orange">#FFA000</color>
+    <color name="alert_yellow">#FFEB3B</color>
+
+    <!-- Weather Colors -->
+    <color name="sky_blue">#29B6F6</color>
+    <color name="cloud_gray">#90A4AE</color>
+
+    <!-- Navigation Colors -->
+    <color name="nav_selected">#2E7D32</color>
+    <color name="nav_unselected">#6D4C41</color>
+</resources>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crop Advisory Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #chat { border: 1px solid #ccc; height: 400px; overflow-y: scroll; padding: 10px; }
+    #input { width: 80%; }
+    #send { width: 18%; }
+    .farmer { color: green; margin: 5px 0; }
+    .advisor { color: blue; margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <h1>Crop Advisory Chat</h1>
+  <div id="chat"></div>
+  <input type="text" id="input" placeholder="Type your query..." />
+  <button id="send">Send</button>
+
+  <script>
+    const chatDiv = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+
+    // Replace with your FastAPI WebSocket URL
+    const ws = new WebSocket('ws://127.0.0.1:8000/ws/stream');
+
+    // ---- AUDIO CONTEXT ----
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let playhead = 0; // keeps track of scheduled playback time
+
+    ws.binaryType = 'arraybuffer';
+
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+    };
+
+    ws.onmessage = (event) => {
+      if (typeof event.data === 'string') {
+        // Text messages (JSON)
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'text') {
+            addMessage('advisor', msg.data);
+          } else if (msg.type === 'verified') {
+            addMessage('advisor', msg.message);
+          } else if (msg.type === 'auth_required') {
+            addMessage('advisor', msg.message);
+          }
+        } catch (e) {
+          console.error('Invalid JSON:', event.data);
+        }
+      } else if (event.data instanceof ArrayBuffer) {
+        // Audio chunk → schedule seamlessly
+        playAudioStream(event.data);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+    };
+
+    sendBtn.onclick = sendMessage;
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+      addMessage('farmer', text);
+      ws.send(text);
+      input.value = '';
+    }
+
+    function addMessage(sender, text) {
+      const p = document.createElement('p');
+      p.className = sender;
+      p.textContent = sender === 'farmer' ? `[Farmer]: ${text}` : `[AgriAdvisor]: ${text}`;
+      chatDiv.appendChild(p);
+      chatDiv.scrollTop = chatDiv.scrollHeight;
+    }
+
+    // ---- GAPLESS AUDIO PLAYBACK ----
+    async function playAudioStream(arrayBuffer) {
+      try {
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioContext.destination);
+
+        // Schedule at either current time or playhead (whichever is later)
+        const BUFFER_MARGIN = 0.2; // 300ms cushion
+        const startTime = Math.max(audioContext.currentTime + BUFFER_MARGIN, playhead);
+        source.start(startTime);
+        playhead = startTime + audioBuffer.duration;
+
+
+        // // Move playhead forward
+        // playhead = startTime + audioBuffer.duration;
+      } catch (err) {
+        console.error("Audio decode error:", err);
+      }
+    }
+  </script>
+</body>
+</html>

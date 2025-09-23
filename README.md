@@ -29,10 +29,6 @@ AI/ML: TensorFlow / Scikit-learn (for crop & soil recommendation models)
 
 APIs: Government Agriculture APIs, OpenWeatherMap (or similar)
 
-📱 Screenshots
-
-(Add screenshots of your app here for better presentation)
-
 🧑‍💻 Installation & Setup
 
 Clone the repository

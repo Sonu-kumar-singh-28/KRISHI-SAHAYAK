@@ -183,4 +183,6 @@ World Bank & FAO – Agricultural insights & sustainability
 
 OpenWeatherMap, Agmarknet, TensorFlow, Firebase
 
+
+
 ✨ Krishi Sahayak – Empowering farmers with AI-driven smart agriculture solutions.

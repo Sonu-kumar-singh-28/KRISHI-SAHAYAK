@@ -1,5 +1,6 @@
 package com.ssu.xyvento.sihapp.ui
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -15,13 +16,23 @@ class User_Profile_Activity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(binding.root)
-
+        // set up back button
         setupBackButton()
+        // second button
+        BackButtonIcon()
     }
 
     private fun setupBackButton() {
         binding.backIcon.setOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
+    }
+
+
+    private  fun BackButtonIcon(){
+        val backbutton = binding.backIcon
+        var intent = Intent(this, MainScreenActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 }

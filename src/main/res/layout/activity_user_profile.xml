@@ -30,8 +30,8 @@
 
         <ImageView
             android:id="@+id/backIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="start"
             android:layout_margin="16dp"
             android:src="@drawable/ic_arrow_back" />

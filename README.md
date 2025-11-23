@@ -14,7 +14,7 @@ It aims to **empower small & marginal farmers** (who form 86% of India’s farmi
 
 ---
 
-## 🚜 Problem  
+## 🚜 Problem ?
 
 - **86% of Indian farmers are small/marginal** (NABARD 2022)  
 - Farmers rely on **guesswork/local advice → low yield & high costs**  

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "120534146094",
+    "project_id": "krishi-shayak-9563f",
+    "storage_bucket": "krishi-shayak-9563f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:120534146094:android:d04dd4f04155aa743753bf",
+        "android_client_info": {
+          "package_name": "com.ssu.xyvento.sihapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZJNK9bk9hLlzolgDQwo_tk6VCqwl25xs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

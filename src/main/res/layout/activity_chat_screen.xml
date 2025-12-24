@@ -231,13 +231,13 @@
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:textColor="@color/black"
-            android:textColorHint="@color/black"
-            android:hint="Ask about crop, soil, weather..."
             android:background="@color/white"
+            android:hint="Ask about crop, soil, weather..."
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
-            android:textSize="14sp"/>
+            android:textColor="@color/black"
+            android:textColorHint="@color/black"
+            android:textSize="14sp" />
 
         <ImageButton
             android:id="@+id/micButton"

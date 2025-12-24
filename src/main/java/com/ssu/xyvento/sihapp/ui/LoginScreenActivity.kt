@@ -2,84 +2,75 @@ package com.ssu.xyvento.sihapp.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.PackageManagerCompat.LOG_TAG
 import com.google.firebase.auth.FirebaseAuth
-import com.ssu.xyvento.sihapp.ui.MainScreenActivity
-import com.ssu.xyvento.sihapp.R
-import com.ssu.xyvento.sihapp.ui.RegisterScreenActivity
+import com.google.firebase.firestore.FirebaseFirestore
 import com.ssu.xyvento.sihapp.databinding.ActivityLoginScreenBinding
 
 class LoginScreenActivity : AppCompatActivity() {
+
     private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
+
     private val binding: ActivityLoginScreenBinding by lazy {
         ActivityLoginScreenBinding.inflate(layoutInflater)
     }
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(binding.root)
+
         auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
 
-        // GoToRedirectButton
-        GoToRegisterScreen()
-        // Login Button
-        setupLoginButton()
-    }
-
-
-    private fun setupLoginButton() {
-        binding.loginButton.setOnClickListener {
-            LoginButton()
-        }
-    }
-
-    // Register button code
-    private fun GoToRegisterScreen() {
-        val RedirectButtonRegister = binding.signupOption
-        RedirectButtonRegister.setOnClickListener {
-            val intent = Intent(this, RegisterScreenActivity::class.java)
-            startActivity(intent)
+        if (auth.currentUser != null) {
+            startActivity(Intent(this, MainScreenActivity::class.java))
             finish()
-        }
-    }
-
-    private fun LoginButton() {
-        val emailId = binding.emailtextfield.editText?.text.toString().trim()
-        val password = binding.passwordInputField.editText?.text.toString().trim()
-
-        //  input validation
-        if (emailId.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please enter email and password.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        Login(emailId, password)
+        binding.signupOption.setOnClickListener {
+            startActivity(Intent(this, RegisterScreenActivity::class.java))
+            finish()
+        }
+
+        binding.loginButton.setOnClickListener {
+            loginUser()
+        }
     }
 
-    private fun Login(email: String, password: String) {
+    private fun loginUser() {
+        val email = binding.emailtextfield.editText?.text.toString().trim()
+        val password = binding.passwordInputField.editText?.text.toString().trim()
+
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Enter email & password", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Log.d(LOG_TAG, "Login Successful")
-                    Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this, MainScreenActivity::class.java))
-                    finish()
-                } else {
-                    Log.e(LOG_TAG, "Failure", task.exception)
-                    val errorMessage = task.exception?.localizedMessage ?: "Authentication Failed"
-                    Toast.makeText(
-                        this,
-                        "Login Failed: $errorMessage",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+            .addOnSuccessListener {
+
+                val uid = auth.currentUser!!.uid
+
+                db.collection("users")
+                    .document(uid)
+                    .get()
+                    .addOnSuccessListener { document ->
+                        val username = document.getString("username") ?: "User"
+                        Toast.makeText(this, "Welcome $username", Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this, MainScreenActivity::class.java))
+                        finish()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "User data not found", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, it.message, Toast.LENGTH_LONG).show()
             }
     }
 }

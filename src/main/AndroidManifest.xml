@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -13,36 +13,39 @@
         android:roundIcon="@drawable/imagesapp"
         android:supportsRtl="true"
         android:theme="@style/Theme.SIHApp">
-
+        <activity
+            android:name=".ui.SoilFertilizerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.PestDiseaseActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.MarketPriceActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.MainScreenActivity"
             android:exported="false" />
-
         <activity
             android:name=".ui.RegisterScreenActivity"
             android:exported="false" />
-
         <activity
             android:name=".ui.LoginScreenActivity"
             android:exported="false" />
-
         <activity
             android:name=".ui.SplashScreenActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.chat_screen_Activity"
             android:exported="false" />
-
         <activity
             android:name=".ui.Agritech_Activity"
             android:exported="false" />
-
         <activity
             android:name=".ui.User_Profile_Activity"
             android:exported="true" />

@@ -17,6 +17,7 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/krishi_images" />
@@ -35,23 +36,18 @@
         android:layout_marginStart="8dp"/>
 
     <!-- Greeting -->
+
+
     <TextView
         android:id="@+id/tvGreeting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello Aditya !"
+        android:text="Hi !"
         android:textColor="@android:color/white"
         android:textSize="26sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="@id/imageView2"
-        app:layout_constraintTop_toBottomOf="@id/imageView2"
-        android:layout_marginTop="24dp"/>
-
-    <!-- Location & Date -->
-
-    <!-- Weather Info -->
-
-    <!-- Feature Section Card -->
+        app:layout_constraintTop_toBottomOf="@+id/imageView2" />
 
     <TextView
         android:id="@+id/tvLocation"
@@ -131,6 +127,7 @@
 
                 <!-- Soil & Fertilizer Guidance -->
                 <LinearLayout
+                    android:id="@+id/soilFertillzer"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
@@ -155,6 +152,7 @@
 
                 <!-- Pest/Disease Detection -->
                 <LinearLayout
+                    android:id="@+id/pest_Disease"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
@@ -179,6 +177,7 @@
 
                 <!-- Market Prices -->
                 <LinearLayout
+                    android:id="@+id/market_Price"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"

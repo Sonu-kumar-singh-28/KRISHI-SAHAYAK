@@ -29,53 +29,74 @@ class MainScreenActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
 
+        binding.bottomNavigationView.selectedItemId = R.id.nav_home
+
         setupBottomNavigation()
-        setupCropAdvisoryButton()
+        setupButtons()
         loadUserName()
         setCurrentDate()
     }
 
-    // 🔥 USERNAME FROM FIRESTORE
     private fun loadUserName() {
         val uid = auth.currentUser?.uid ?: return
-
-        db.collection("users").document(uid)
-            .get()
-            .addOnSuccessListener { doc ->
-                val username = doc.getString("username") ?: "User"
-                binding.tvGreeting.text = "Hello $username!"
+        db.collection("users").document(uid).get()
+            .addOnSuccessListener {
+                binding.tvGreeting.text =
+                    "Hello ${it.getString("username") ?: "User"}!"
             }
     }
 
-    // 🔥 CALENDAR DATE
     private fun setCurrentDate() {
-        val dateFormat = SimpleDateFormat("EEE, dd MMM", Locale.getDefault())
-        val currentDate = dateFormat.format(Date())
-
-        binding.tvLocation.text = "India\n$currentDate"
+        val sdf = SimpleDateFormat("EEE, dd MMM", Locale.getDefault())
+        binding.tvLocation.text = "India\n${sdf.format(Date())}"
     }
 
     private fun setupBottomNavigation() {
         binding.bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
 
+                R.id.nav_home -> true
+
                 R.id.nav_profile -> {
                     startActivity(Intent(this, User_Profile_Activity::class.java))
                     true
                 }
 
-                R.id.nav_home -> true
+                R.id.nav_advisory -> {
+                    startActivity(Intent(this, chat_screen_Activity::class.java))
+                    true
+                }
+
+                R.id.nav_market -> {
+                    startActivity(Intent(this, MarketPriceActivity::class.java))
+                    true
+                }
+
+                R.id.nav_SoilFertilizer -> {
+                    startActivity(Intent(this, SoilFertilizerActivity::class.java))
+                    true
+                }
 
                 else -> false
             }
         }
     }
 
-    private fun setupCropAdvisoryButton() {
+    private fun setupButtons() {
         binding.cropAdvisory.setOnClickListener {
             startActivity(Intent(this, chat_screen_Activity::class.java))
         }
+
+        binding.soilFertillzer.setOnClickListener {
+            startActivity(Intent(this, SoilFertilizerActivity::class.java))
+        }
+
+        binding.pestDisease.setOnClickListener {
+            startActivity(Intent(this, PestDiseaseActivity::class.java))
+        }
+
+        binding.marketPrice.setOnClickListener {
+            startActivity(Intent(this, MarketPriceActivity::class.java))
+        }
     }
-
-
 }

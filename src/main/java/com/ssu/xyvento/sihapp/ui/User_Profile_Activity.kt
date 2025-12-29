@@ -2,12 +2,14 @@ package com.ssu.xyvento.sihapp.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.ssu.xyvento.sihapp.R
 import com.ssu.xyvento.sihapp.databinding.ActivityUserProfileBinding
 import kotlin.random.Random
 
@@ -96,25 +98,54 @@ class User_Profile_Activity : AppCompatActivity() {
     private fun setupEditProfile() {
         binding.editButton.setOnClickListener {
 
-            val updatedData = hashMapOf(
-                "username" to binding.fullNameField.text.toString(),
-                "email" to binding.emailField.text.toString(),
-                "birthday" to binding.birthdayField.text.toString(),
-                "phone" to binding.phoneField.text.toString(),
-                "kisanId" to binding.instaField.text.toString()
-            )
+            val dialogView = layoutInflater.inflate(R.layout.dialog_edit_profile, null)
 
-            db.collection("users").document(uid)
-                .set(updatedData, SetOptions.merge())
-                .addOnSuccessListener {
-                    Toast.makeText(this, "Profile Updated Successfully", Toast.LENGTH_SHORT).show()
+            val etName = dialogView.findViewById<EditText>(R.id.etName)
+            val etEmail = dialogView.findViewById<EditText>(R.id.etEmail)
+            val etBirthday = dialogView.findViewById<EditText>(R.id.etBirthday)
+            val etPhone = dialogView.findViewById<EditText>(R.id.etPhone)
+            val etKisanId = dialogView.findViewById<EditText>(R.id.etKisanId)
+
+            // Set old values
+            etName.setText(binding.fullNameField.text.toString())
+            etEmail.setText(binding.emailField.text.toString())
+            etBirthday.setText(binding.birthdayField.text.toString())
+            etPhone.setText(binding.phoneField.text.toString())
+            etKisanId.setText(binding.instaField.text.toString())
+
+            val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Edit Profile")
+                .setView(dialogView)
+                .setPositiveButton("Save") { _, _ ->
+
+                    val updatedData = hashMapOf(
+                        "username" to etName.text.toString(),
+                        "email" to etEmail.text.toString(),
+                        "birthday" to etBirthday.text.toString(),
+                        "phone" to etPhone.text.toString(),
+                        "kisanId" to etKisanId.text.toString()
+                    )
+
+                    db.collection("users").document(uid)
+                        .set(updatedData, SetOptions.merge())
+                        .addOnSuccessListener {
+                            // Update UI
+                            binding.userName.text = etName.text.toString()
+                            binding.fullNameField.setText(etName.text.toString())
+                            binding.emailField.setText(etEmail.text.toString())
+                            binding.birthdayField.setText(etBirthday.text.toString())
+                            binding.phoneField.setText(etPhone.text.toString())
+                            binding.instaField.setText(etKisanId.text.toString())
+
+                            Toast.makeText(this, "Profile Updated Successfully", Toast.LENGTH_SHORT).show()
+                        }
                 }
-                .addOnFailureListener {
-                    Toast.makeText(this, it.message, Toast.LENGTH_LONG).show()
-                }
+                .setNegativeButton("Cancel", null)
+                .create()
+
+            dialog.show()
         }
     }
-
     private fun generateBirthday(): String {
         return "12 Aug 1998"
     }

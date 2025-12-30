@@ -1,3 +1,4 @@
+#port 7858
 import sys
 import traceback
 from pathlib import Path
@@ -53,16 +54,17 @@ async def websocket_endpoint(websocket: WebSocket, sid=Query(None)):
             # Send back text
             await websocket.send_text(json.dumps({"type": "text", "data": response}))
 
-            # Send back TTS audio
-            async for chunk in stream_tts(response):
-                await websocket.send_bytes(chunk)
+            # Send back TTS audio (skip for error messages)
+            if not response.startswith("Sorry"):
+                async for chunk in stream_tts(response):
+                    await websocket.send_bytes(chunk)
 
     except WebSocketDisconnect:
         if session_id in active_session:
             delete_session(session_id)
         print(f"WebSocket disconnected for session {session_id}")
 
-    except Exception as e:
+    except Exception as e: 
         print(f"Error in session {session_id}:", e)
         traceback.print_exc()
         if session_id in active_session:

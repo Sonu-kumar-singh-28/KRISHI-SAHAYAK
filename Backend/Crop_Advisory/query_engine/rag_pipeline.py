@@ -1,50 +1,46 @@
 # query_engine/rag_pipeline.py
 
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain.chains import create_history_aware_retriever, create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_core.chat_history import BaseChatMessageHistory
-from langchain_core.messages import BaseMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 import os
+import time
 from dotenv import load_dotenv
 from typing import Dict, List
 
 load_dotenv()
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# ---- LLM ----
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash-lite",
+# ---- LLM (Groq - Fast & Free) ----
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",  # Fast, free model on Groq
     temperature=0.4,
-    max_output_tokens=256,
-    google_api_key=GOOGLE_API_KEY,
+    max_tokens=256,
+    api_key=GROQ_API_KEY,
 )
 
-# ---- Session Memory ----
-session_store: Dict[str, BaseChatMessageHistory] = {}
+# ---- Simple Session Memory (in-memory) ----
+session_history: Dict[str, List[str]] = {}
+MAX_HISTORY = 4  # Keep last 4 exchanges
 
-class SlidingWindowHistory(BaseChatMessageHistory):
-    def __init__(self, window_size: int = 8):
-        self.window_size = window_size
-        self._messages: List[BaseMessage] = []
-    @property
-    def messages(self) -> List[BaseMessage]:
-        return self._messages
-    def add_message(self, message: BaseMessage) -> None:
-        self._messages.append(message)
-        if len(self._messages) > self.window_size:
-            self._messages = self._messages[-self.window_size:]
-    def clear(self) -> None:
-        self._messages = []
+def get_history(session_id: str) -> str:
+    """Get formatted chat history for a session."""
+    if session_id not in session_history:
+        session_history[session_id] = []
+    history = session_history[session_id]
+    return "\n".join(history[-MAX_HISTORY:]) if history else "No previous conversation."
 
-def get_session_history(session_id: str) -> BaseChatMessageHistory:
-    if session_id not in session_store:
-        session_store[session_id] = SlidingWindowHistory(window_size=8)
-    return session_store[session_id]
+def add_to_history(session_id: str, user_msg: str, bot_msg: str):
+    """Add exchange to session history."""
+    if session_id not in session_history:
+        session_history[session_id] = []
+    session_history[session_id].append(f"Farmer: {user_msg}")
+    session_history[session_id].append(f"Assistant: {bot_msg}")
+    # Trim to max size
+    if len(session_history[session_id]) > MAX_HISTORY * 2:
+        session_history[session_id] = session_history[session_id][-MAX_HISTORY * 2:]
 
 # ---- Vectorstore Loader ----
 def load_crop_vectorstore():
@@ -58,74 +54,76 @@ def load_crop_vectorstore():
     print("✅ Crop advisory FAISS vectorstore loaded.")
     return vectorstore
 
-# ---- Conversational RAG ----
-def create_crop_rag_chain(vectorstore):
-    contextualize_q_prompt = ChatPromptTemplate.from_messages([
-        ("system", "Rewrite the latest farmer question into a standalone query if needed."),
-        MessagesPlaceholder("chat_history"),
-        ("human", "{input}"),
-    ])
+# ---- Simple RAG Prompt (Single LLM call) ----
+PROMPT_TEMPLATE = """You are Khrishi Sahayak, a helpful AI assistant for farmers in India.
 
-    history_aware_retriever = create_history_aware_retriever(
-        llm, vectorstore.as_retriever(), contextualize_q_prompt
-    )
+Rules:
+- Give practical, cost-effective agricultural advice
+- Use simple language, avoid jargon
+- If question is not about farming, politely redirect to agriculture topics
+- No markdown formatting, use plain text only
 
-    qa_prompt = ChatPromptTemplate.from_messages([
-        ("system", """
-You are Khrishi Sahayak, a helpful AI assistant for farmers in India. Your purpose is to provide practical, cost-effective, and data-driven agricultural advice. All responses must be in simple, direct language.
-Core Function: Your primary role is to assist with crop advisory, cost-effective farming techniques, and disease management.
-Polite Redirection: If a user asks for anything not related to agriculture, politely decline and steer the conversation back to farming. For example, "I can't help with that, but I can assist you with your farming needs. How can I help you with your crops today?"
-Cost-Effective Advice: Always prioritize solutions that are financially viable for the farmer. Focus on methods that save money and increase profit.
-Crop Advisory Protocol:
-If a user asks for a crop advisory, you must first ask for three key pieces of information: land size (in acres or bighas), investment budget, and location (state and district).
-Once you have this information, use your knowledge base of Indian agriculture to provide a comprehensive guide. This guide must include:
-Recommended Crop: The best crop for their region's climate and market.
-Best Variety: A high-yield and disease-resistant variety of that crop.
-Investment Details: A breakdown of the estimated costs for seeds, fertilizers, pesticides, and labor.
-Sowing Time: The ideal time of year to sow for maximum yield.
-Fertilizer and Irrigation: A schedule for fertilizing and a water-saving irrigation plan.
-Estimated Profit: A realistic calculation of their potential profit.
-Plant Disease Protocol: If a user describes a plant disease, identify it and provide a simple, cost-effective treatment plan using easily available and safe products.
-Language and Tone: Speak in a helpful and respectful manner. Use simple vocabulary and avoid technical jargon. Your goal is to satisfy the farmer with clear and useful information.
-Strictly No markdown should be used in your responses. Output should be in plain text.
 Context from knowledge base:
 {context}
 
-Farmer Profile:
-{farmer_profile}
-"""),
-        MessagesPlaceholder("chat_history"),
-        ("human", "{input}"),
-    ])
+Farmer Profile: {farmer_profile}
 
-    question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
-    rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
+Recent Conversation:
+{history}
 
-    conversational_rag_chain = RunnableWithMessageHistory(
-        rag_chain,
-        get_session_history,
-        input_messages_key="input",
-        history_messages_key="chat_history",
-        output_messages_key="answer",
-    )
-    return conversational_rag_chain
+Farmer's Question: {question}
 
-# ---- Entry point ----
-_conversational_chain = None
+Your helpful response:"""
 
-def initialize_chain(vectorstore):
-    global _conversational_chain
-    if _conversational_chain is None:
-        _conversational_chain = create_crop_rag_chain(vectorstore)
-    return _conversational_chain
+prompt = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
 
-def ask(SID: str, query: str, vectorstore, farmer_profile: str = None):
-    chain = initialize_chain(vectorstore)
-    result = chain.invoke(
-        {
-            "input": query,
-            "farmer_profile": farmer_profile or "No farmer profile provided."
-        },
-        config={"configurable": {"session_id": SID}}
-    )
-    return result.get("answer", "Sorry, I couldn't generate an answer.")
+# ---- Rate Limiting ----
+_last_call_time = 0
+MIN_CALL_INTERVAL = 0.5  # 500ms between API calls
+
+def _rate_limit():
+    """Simple rate limiter to prevent API overload."""
+    global _last_call_time
+    elapsed = time.time() - _last_call_time
+    if elapsed < MIN_CALL_INTERVAL:
+        time.sleep(MIN_CALL_INTERVAL - elapsed)
+    _last_call_time = time.time()
+
+# ---- Main Ask Function ----
+def ask(SID: str, query: str, vectorstore, farmer_profile: str = None) -> str:
+    """
+    Simple RAG query - ONE LLM call only.
+    """
+    _rate_limit()
+    
+    try:
+        # Retrieve relevant documents
+        retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+        docs = retriever.invoke(query)
+        context = "\n\n".join([doc.page_content for doc in docs])
+        
+        # Get chat history
+        history = get_history(SID)
+        
+        # Build chain: prompt -> llm -> parse output
+        chain = prompt | llm | StrOutputParser()
+        
+        # Invoke with all inputs
+        response = chain.invoke({
+            "context": context,
+            "farmer_profile": farmer_profile or "No farmer profile provided.",
+            "history": history,
+            "question": query
+        })
+        
+        # Save to history
+        add_to_history(SID, query, response)
+        
+        return response
+    
+    except Exception as e:
+        error_msg = str(e)
+        if "429" in error_msg or "rate" in error_msg.lower():
+            return "Sorry, the service is temporarily busy. Please try again in a few minutes."
+        print(f"❌ Error in ask(): {e}")
+        return "Sorry, I encountered an error. Please try again."
